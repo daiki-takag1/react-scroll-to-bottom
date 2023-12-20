@@ -127,68 +127,68 @@ jobs:
         name: Stopping Docker Compose
         run: npm run docker:down
 
-  # "public" job will only run when merging a commit or tag.
-  # It does not depends on "test" because we assume it already passed pull request status checks and "test" can be unreliable at times.
-  publish:
-    needs:
-      - build
-    runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/') }}
+  # # "public" job will only run when merging a commit or tag.
+  # # It does not depends on "test" because we assume it already passed pull request status checks and "test" can be unreliable at times.
+  # publish:
+  #   needs:
+  #     - build
+  #   runs-on: ubuntu-latest
+  #   if: ${{ startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/tags/') }}
 
-    steps:
-      - name: Downloading npm-tarball
-        uses: actions/download-artifact@v2
-        with:
-          name: npm-tarball
+  #   steps:
+  #     - name: Downloading npm-tarball
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: npm-tarball
 
-      - name: Downloading gh-pages
-        uses: actions/download-artifact@v2
-        with:
-          name: gh-pages
-          path: gh-pages/
+  #     - name: Downloading gh-pages
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: gh-pages
+  #         path: gh-pages/
 
-      - name: Reading package.json
-        id: read-package-json
-        run: |
-          echo "::set-output name=name::$(tar xOf *.tgz package/package.json | jq -r '.name')"
-          echo "::set-output name=version::$(tar xOf *.tgz package/package.json | jq -r '.version')"
-          echo "::set-output name=tarball::$(ls *.tgz)"
-          echo "::set-output name=date::$(date +%Y-%m-%d)"
+  #     - name: Reading package.json
+  #       id: read-package-json
+  #       run: |
+  #         echo "::set-output name=name::$(tar xOf *.tgz package/package.json | jq -r '.name')"
+  #         echo "::set-output name=version::$(tar xOf *.tgz package/package.json | jq -r '.version')"
+  #         echo "::set-output name=tarball::$(ls *.tgz)"
+  #         echo "::set-output name=date::$(date +%Y-%m-%d)"
 
-      - name: Publishing ${{ steps.read-package-json.outputs.name }}@${{ steps.read-package-json.outputs.version }}
-        run: |
-          npm config set //registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
-          npm publish *.tgz --tag main
+  #     - name: Publishing ${{ steps.read-package-json.outputs.name }}@${{ steps.read-package-json.outputs.version }}
+  #       run: |
+  #         npm config set //registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
+  #         npm publish *.tgz --tag main
 
-      - name: Tagging dist-tag ${{ steps.read-package-json.outputs.name }}@${{ steps.read-package-json.outputs.version }} latest
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        run: |
-          npm dist-tag add ${{ steps.read-package-json.outputs.name }}@${{ steps.read-package-json.outputs.version }} latest
+  #     - name: Tagging dist-tag ${{ steps.read-package-json.outputs.name }}@${{ steps.read-package-json.outputs.version }} latest
+  #       if: ${{ startsWith(github.ref, 'refs/tags/') }}
+  #       run: |
+  #         npm dist-tag add ${{ steps.read-package-json.outputs.name }}@${{ steps.read-package-json.outputs.version }} latest
 
-      - name: Drafting a new release
-        uses: actions/create-release@v1
-        id: create-release
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: '[${{ steps.read-package-json.outputs.version }}] - ${{ steps.read-package-json.outputs.date }}'
-          draft: true
+  #     - name: Drafting a new release
+  #       uses: actions/create-release@v1
+  #       id: create-release
+  #       if: ${{ startsWith(github.ref, 'refs/tags/') }}
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       with:
+  #         tag_name: ${{ github.ref }}
+  #         release_name: '[${{ steps.read-package-json.outputs.version }}] - ${{ steps.read-package-json.outputs.date }}'
+  #         draft: true
 
-      - name: Uploading tarball to release
-        uses: actions/upload-release-asset@v1
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: ./${{ steps.read-package-json.outputs.tarball }}
-          asset_name: ${{ steps.read-package-json.outputs.tarball }}
-          asset_content_type: application/octet-stream
+  #     - name: Uploading tarball to release
+  #       uses: actions/upload-release-asset@v1
+  #       if: ${{ startsWith(github.ref, 'refs/tags/') }}
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       with:
+  #         upload_url: ${{ steps.create-release.outputs.upload_url }}
+  #         asset_path: ./${{ steps.read-package-json.outputs.tarball }}
+  #         asset_name: ${{ steps.read-package-json.outputs.tarball }}
+  #         asset_content_type: application/octet-stream
 
-      - name: Deploying to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./gh-pages/
+  #     - name: Deploying to GitHub Pages
+  #       uses: peaceiris/actions-gh-pages@v3
+  #       with:
+  #         github_token: ${{ secrets.GITHUB_TOKEN }}
+  #         publish_dir: ./gh-pages/

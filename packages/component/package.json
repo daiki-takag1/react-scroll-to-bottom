@@ -21,6 +21,9 @@
   "files": [
     "lib/**/*"
   ],
+  "publishConfig": {
+    "@daiki-takag1:registry": "https://npm.pkg.github.com"
+  },
   "scripts": {
     "build": "npm run build:babel && npm run build:esbuild && npm run build:test-harness",
     "build:babel": "concurrently \"npm run build:babel:*\"",
