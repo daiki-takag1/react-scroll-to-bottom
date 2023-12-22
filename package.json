@@ -19,6 +19,9 @@
     "start:serve": "serve -c __tests__/serve.json",
     "test": "jest"
   },
+  "publishConfig": {
+    "@daiki-takag1:registry": "https://npm.pkg.github.com"
+  },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-es2020": "^1.0.2",
